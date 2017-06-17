@@ -43,11 +43,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AsymmetricCipherHelper.cs" />
+    <Compile Include="RijndaelCipherHelper.cs" />
     <Compile Include="ICipherHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SymmetricCipherHelper.cs" />
+    <Compile Include="TripleDesCipherHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

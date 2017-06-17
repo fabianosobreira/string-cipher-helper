@@ -11,8 +11,8 @@ namespace CipherHelper
             const string passPhrase = "my-secret-key";
             const int interactions = 100;
 
-            Run(new SymmetricCipherHelper(), textToCipher, passPhrase, interactions);
-            Run(new AsymmetricCipherHelper(), textToCipher, passPhrase, interactions);
+            Run(new TripleDesCipherHelper(), textToCipher, passPhrase, interactions);
+            Run(new RijndaelCipherHelper(), textToCipher, passPhrase, interactions);
         }
 
         private static void Run(ICipherHelper helper, string textToCipher, string passPhrase, int interactions)

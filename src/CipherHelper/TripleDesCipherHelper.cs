@@ -7,7 +7,7 @@ namespace CipherHelper
     /**
      * Symmetric string cipher implementation using TripleDES
      */
-    public class SymmetricCipherHelper : ICipherHelper
+    public class TripleDesCipherHelper : ICipherHelper
     {
         public string Encrypt(string plainText, string passPhrase)
         {

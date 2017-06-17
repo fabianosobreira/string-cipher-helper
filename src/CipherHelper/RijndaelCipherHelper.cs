@@ -7,16 +7,16 @@ using System.Text;
 
 namespace CipherHelper
 {
-    public class AsymmetricCipherHelper : ICipherHelper
+    public class RijndaelCipherHelper : ICipherHelper
     {
         private const int KeySizeInBytes = 32;
         private readonly int DerivationIterations;
 
-        public AsymmetricCipherHelper() : this(100)
+        public RijndaelCipherHelper() : this(100)
         {
         }
 
-        public AsymmetricCipherHelper(int derivationIterations)
+        public RijndaelCipherHelper(int derivationIterations)
         {
             DerivationIterations = derivationIterations;
         }
