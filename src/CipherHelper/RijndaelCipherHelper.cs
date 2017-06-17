@@ -9,8 +9,8 @@ namespace CipherHelper
 {
     public class RijndaelCipherHelper : ICipherHelper
     {
-        private const int KeySizeInBytes = 32;
-        private readonly int DerivationIterations;
+        private const int keySizeInBytes = 32;
+        private readonly int derivationIterations;
 
         public RijndaelCipherHelper() : this(100)
         {
@@ -18,30 +18,29 @@ namespace CipherHelper
 
         public RijndaelCipherHelper(int derivationIterations)
         {
-            DerivationIterations = derivationIterations;
+            this.derivationIterations = derivationIterations;
         }
-
 
         public string Encrypt(string plainText, string passPhrase)
         {
             // Salt and IV is randomly generated each time, but is preprended to encrypted cipher text
             // so that the same Salt and IV values can be used when decrypting.
-            var saltStringBytes = Generate256BitsOfRandomEntropy();
-            var ivStringBytes = Generate256BitsOfRandomEntropy();
-            var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+            byte[] saltStringBytes = Generate256BitsOfRandomEntropy();
+            byte[] ivStringBytes = Generate256BitsOfRandomEntropy();
+            byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
 
-            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, derivationIterations))
             {
-                var keyBytes = password.GetBytes(KeySizeInBytes);
-                using (var symmetricKey = new RijndaelManaged())
+                byte[] keyBytes = password.GetBytes(keySizeInBytes);
+                using (RijndaelManaged symmetricKey = new RijndaelManaged())
                 {
                     symmetricKey.BlockSize = 256;
                     symmetricKey.Mode = CipherMode.CBC;
                     symmetricKey.Padding = PaddingMode.PKCS7;
 
-                    using (var encryptor = symmetricKey.CreateEncryptor(keyBytes, ivStringBytes))
-                    using (var memoryStream = new MemoryStream())
-                    using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                    using (ICryptoTransform encryptor = symmetricKey.CreateEncryptor(keyBytes, ivStringBytes))
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
                     {
                         cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
                         cryptoStream.FlushFinalBlock();
@@ -60,32 +59,32 @@ namespace CipherHelper
         {
             // Get the complete stream of bytes that represent:
             // [32 bytes of Salt] + [32 bytes of IV] + [n bytes of CipherText]
-            var cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
+            byte[] cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
 
             // Get the saltbytes by extracting the first 32 bytes from the supplied cipherText bytes.
-            var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(KeySizeInBytes).ToArray();
+            byte[] saltStringBytes = cipherTextBytesWithSaltAndIv.Take(keySizeInBytes).ToArray();
 
             // Get the IV bytes by extracting the next 32 bytes from the supplied cipherText bytes.
-            var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(KeySizeInBytes).Take(KeySizeInBytes).ToArray();
+            byte[] ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(keySizeInBytes).Take(keySizeInBytes).ToArray();
 
             // Get the actual cipher text bytes by removing the first 64 bytes from the cipherText string.
-            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((KeySizeInBytes) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((KeySizeInBytes) * 2)).ToArray();
+            byte[] cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((keySizeInBytes) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((keySizeInBytes) * 2)).ToArray();
 
-            using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, derivationIterations))
             {
-                var keyBytes = password.GetBytes(KeySizeInBytes);
-                using (var symmetricKey = new RijndaelManaged())
+                byte[] keyBytes = password.GetBytes(keySizeInBytes);
+                using (RijndaelManaged symmetricKey = new RijndaelManaged())
                 {
                     symmetricKey.BlockSize = 256;
                     symmetricKey.Mode = CipherMode.CBC;
                     symmetricKey.Padding = PaddingMode.PKCS7;
 
-                    using (var decryptor = symmetricKey.CreateDecryptor(keyBytes, ivStringBytes))
-                    using (var memoryStream = new MemoryStream(cipherTextBytes))
-                    using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+                    using (ICryptoTransform decryptor = symmetricKey.CreateDecryptor(keyBytes, ivStringBytes))
+                    using (MemoryStream memoryStream = new MemoryStream(cipherTextBytes))
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
                     {
-                        var plainTextBytes = new byte[cipherTextBytes.Length];
-                        var decryptedByteCount = cryptoStream.Read(plainTextBytes, 0, plainTextBytes.Length);
+                        byte[] plainTextBytes = new byte[cipherTextBytes.Length];
+                        int decryptedByteCount = cryptoStream.Read(plainTextBytes, 0, plainTextBytes.Length);
 
                         return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
                     }
@@ -95,8 +94,8 @@ namespace CipherHelper
 
         private byte[] Generate256BitsOfRandomEntropy()
         {
-            var randomBytes = new byte[32];
-            using (var rngCsp = new RNGCryptoServiceProvider())
+            byte[] randomBytes = new byte[32];
+            using (RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider())
             {
                 rngCsp.GetBytes(randomBytes);
             }

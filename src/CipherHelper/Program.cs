@@ -17,7 +17,7 @@ namespace CipherHelper
 
         private static void Run(ICipherHelper helper, string textToCipher, string passPhrase, int interactions)
         {
-            var sw = Stopwatch.StartNew();
+            Stopwatch sw = Stopwatch.StartNew();
 
             for (int i = 0; i < interactions; i++)
             {
