@@ -13,7 +13,7 @@ namespace CipherHelper
         private readonly SymmetricAlgorithm algorithm;
         private readonly int keySizeInBytes;
         private readonly int blockSizeInBytes;
-        private readonly int saltSizeInBytes = 32;
+        private readonly int saltSizeInBytes;
         private readonly int derivationIterations = 1000;
 
         public CipherHelper(SymmetricAlgorithm algorithm)
@@ -24,6 +24,7 @@ namespace CipherHelper
 
             keySizeInBytes = algorithm.KeySize / 8;
             blockSizeInBytes = algorithm.BlockSize / 8;
+            saltSizeInBytes = blockSizeInBytes * 2;
         }
 
         public CipherHelper(SymmetricAlgorithm algorithm, int derivationIterations)
@@ -34,15 +35,14 @@ namespace CipherHelper
 
         public string Encrypt(string plainText, string passPhrase)
         {
-            byte[] salt = GenerateEntropy(saltSizeInBytes);
-            byte[] intializationVector = GenerateEntropy(blockSizeInBytes);
+            byte[] salt = GenerateEntropy();
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
 
             using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, salt, derivationIterations))
             {
                 byte[] key = password.GetBytes(keySizeInBytes);
 
-                using (ICryptoTransform encryptor = algorithm.CreateEncryptor(key, intializationVector))
+                using (ICryptoTransform encryptor = algorithm.CreateEncryptor(key, algorithm.IV))
                 using (MemoryStream memoryStream = new MemoryStream())
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
                 {
@@ -50,7 +50,7 @@ namespace CipherHelper
                     cryptoStream.FlushFinalBlock();
 
                     IEnumerable<byte> cipherTextBytes = salt;
-                    cipherTextBytes = cipherTextBytes.Concat(intializationVector);
+                    cipherTextBytes = cipherTextBytes.Concat(algorithm.IV);
                     cipherTextBytes = cipherTextBytes.Concat(memoryStream.ToArray());
 
                     return Convert.ToBase64String(cipherTextBytes.ToArray());
@@ -90,9 +90,9 @@ namespace CipherHelper
             }
         }
 
-        private byte[] GenerateEntropy(int sizeInBytes)
+        private byte[] GenerateEntropy()
         {
-            byte[] randomBytes = new byte[sizeInBytes];
+            byte[] randomBytes = new byte[saltSizeInBytes];
             using (RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider())
             {
                 rngCsp.GetBytes(randomBytes);

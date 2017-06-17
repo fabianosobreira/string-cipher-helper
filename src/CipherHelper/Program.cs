@@ -12,19 +12,29 @@ namespace CipherHelper
             const string passPhrase = "my-secret-key";
             const int interactions = 100;
 
-            using (RC2 rc2 = RC2.Create())
+            using (Aes algorithm = Aes.Create())
             {
-                Run(rc2, textToCipher, passPhrase, interactions);
+                Run(algorithm, textToCipher, passPhrase, interactions);
             }
 
-            using (TripleDES tdes = TripleDES.Create())
+            using (DES algorithm = DES.Create())
             {
-                Run(tdes, textToCipher, passPhrase, interactions);
+                Run(algorithm, textToCipher, passPhrase, interactions);
             }
 
-            using (Rijndael rijndael = Rijndael.Create())
+            using (RC2 algorithm = RC2.Create())
             {
-                Run(rijndael, textToCipher, passPhrase, interactions);
+                Run(algorithm, textToCipher, passPhrase, interactions);
+            }
+
+            using (Rijndael algorithm = Rijndael.Create())
+            {
+                Run(algorithm, textToCipher, passPhrase, interactions);
+            }
+
+            using (TripleDES algorithm = TripleDES.Create())
+            {
+                Run(algorithm, textToCipher, passPhrase, interactions);
             }
         }
 
