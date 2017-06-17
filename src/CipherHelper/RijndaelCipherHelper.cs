@@ -10,9 +10,9 @@ namespace CipherHelper
     public class RijndaelCipherHelper : ICipherHelper
     {
         private const int keySizeInBytes = 32;
-        private readonly int derivationIterations;
+        private readonly int derivationIterations = 1000;
 
-        public RijndaelCipherHelper() : this(100)
+        public RijndaelCipherHelper()
         {
         }
 
