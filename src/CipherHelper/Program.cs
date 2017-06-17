@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace CipherHelper
 {
@@ -11,13 +12,26 @@ namespace CipherHelper
             const string passPhrase = "my-secret-key";
             const int interactions = 100;
 
-            Run(new TripleDesCipherHelper(), textToCipher, passPhrase, interactions);
-            Run(new RijndaelCipherHelper(), textToCipher, passPhrase, interactions);
+            using (RC2 rc2 = RC2.Create())
+            {
+                Run(rc2, textToCipher, passPhrase, interactions);
+            }
+
+            using (TripleDES tdes = TripleDES.Create())
+            {
+                Run(tdes, textToCipher, passPhrase, interactions);
+            }
+
+            using (Rijndael rijndael = Rijndael.Create())
+            {
+                Run(rijndael, textToCipher, passPhrase, interactions);
+            }
         }
 
-        private static void Run(ICipherHelper helper, string textToCipher, string passPhrase, int interactions)
+        private static void Run(SymmetricAlgorithm algorithm, string textToCipher, string passPhrase, int interactions)
         {
             Stopwatch sw = Stopwatch.StartNew();
+            ICipherHelper helper = new CipherHelper(algorithm);
 
             for (int i = 0; i < interactions; i++)
             {
@@ -30,7 +44,7 @@ namespace CipherHelper
 
             sw.Stop();
 
-            Console.WriteLine($"Ellapsed after {interactions} using {helper.GetType().Name}: {sw.Elapsed}");
+            Console.WriteLine($"Ellapsed after {interactions} interactions using {algorithm.GetType().Name}: {sw.Elapsed}");
         }
     }
 }
