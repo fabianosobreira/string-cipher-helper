@@ -8,40 +8,66 @@ namespace CipherHelper
     {
         public static void Main(string[] args)
         {
-            const string textToCipher = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+            const string textToTest = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
             const string passPhrase = "my-secret-key";
             const int interactions = 100;
 
-            using (Aes algorithm = Aes.Create())
+            Console.WriteLine("Testing Hash algorithms...");
+
+            using (MD5 algorithm = new MD5CryptoServiceProvider())
             {
-                Run(algorithm, textToCipher, passPhrase, interactions);
+                TestHashAlgorithm(algorithm, textToTest, interactions);
             }
 
-            using (DES algorithm = DES.Create())
+            using (SHA1 algorithm = new SHA1CryptoServiceProvider())
             {
-                Run(algorithm, textToCipher, passPhrase, interactions);
+                TestHashAlgorithm(algorithm, textToTest, interactions);
             }
 
-            using (RC2 algorithm = RC2.Create())
+            using (SHA256 algorithm = new SHA256CryptoServiceProvider())
             {
-                Run(algorithm, textToCipher, passPhrase, interactions);
+                TestHashAlgorithm(algorithm, textToTest, interactions);
             }
 
-            using (Rijndael algorithm = Rijndael.Create())
+            using (SHA384 algorithm = new SHA384CryptoServiceProvider())
             {
-                Run(algorithm, textToCipher, passPhrase, interactions);
+                TestHashAlgorithm(algorithm, textToTest, interactions);
             }
 
-            using (TripleDES algorithm = TripleDES.Create())
+            using (SHA512 algorithm = new SHA512CryptoServiceProvider())
             {
-                Run(algorithm, textToCipher, passPhrase, interactions);
+                TestHashAlgorithm(algorithm, textToTest, interactions);
             }
+
+            Console.WriteLine("Testing Symmetric algorithms...");
+
+            using (RC2 algorithm = new RC2CryptoServiceProvider())
+            {
+                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+            }
+
+            using (DES algorithm = new DESCryptoServiceProvider())
+            {
+                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+            }
+
+            using (TripleDES algorithm = new TripleDESCryptoServiceProvider())
+            {
+                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+            }
+
+            using (Aes algorithm = new AesCryptoServiceProvider())
+            {
+                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+            }
+
+            Console.WriteLine("Test finished.");
         }
 
-        private static void Run(SymmetricAlgorithm algorithm, string textToCipher, string passPhrase, int interactions)
+        private static void TestSymmetricAlgorithm(SymmetricAlgorithm algorithm, string textToCipher, string passPhrase, int interactions)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            ICipherHelper helper = new CipherHelper(algorithm);
+            IStringCipherHelper helper = new StringCipherHelper(algorithm);
 
             for (int i = 0; i < interactions; i++)
             {
@@ -50,6 +76,22 @@ namespace CipherHelper
 
                 Debug.Assert(textToCipher != helloEncrypted);
                 Debug.Assert(textToCipher == helloDecrypted);
+            }
+
+            sw.Stop();
+
+            Console.WriteLine($"Ellapsed after {interactions} interactions using {algorithm.GetType().Name}: {sw.Elapsed}");
+        }
+
+        private static void TestHashAlgorithm(HashAlgorithm algorithm, string textToHash, int interactions)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            IStringHashHelper helper = new StringHashHelper(algorithm);
+
+            for (int i = 0; i < interactions; i++)
+            {
+                string hash = helper.Hash(textToHash);
+                Debug.Assert(helper.HashIsValid(textToHash, hash));
             }
 
             sw.Stop();

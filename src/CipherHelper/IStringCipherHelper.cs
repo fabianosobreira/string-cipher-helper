@@ -8,7 +8,7 @@ using System.Text;
 
 namespace CipherHelper
 {
-    public interface ICipherHelper
+    public interface IStringCipherHelper
     {
         string Encrypt(string plainText, string passPhrase);
         string Decrypt(string cipherText, string passPhrase);

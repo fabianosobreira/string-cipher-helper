@@ -4,11 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CipherHelper
 {
-    public class CipherHelper : ICipherHelper
+    public class StringCipherHelper : IStringCipherHelper
     {
         private readonly SymmetricAlgorithm algorithm;
         private readonly int keySizeInBytes;
@@ -16,18 +15,15 @@ namespace CipherHelper
         private readonly int saltSizeInBytes;
         private readonly int derivationIterations = 1000;
 
-        public CipherHelper(SymmetricAlgorithm algorithm)
+        public StringCipherHelper(SymmetricAlgorithm algorithm)
         {
             this.algorithm = algorithm;
-            this.algorithm.Mode = CipherMode.CBC;
-            this.algorithm.Padding = PaddingMode.PKCS7;
-
             keySizeInBytes = algorithm.KeySize / 8;
             blockSizeInBytes = algorithm.BlockSize / 8;
             saltSizeInBytes = blockSizeInBytes * 2;
         }
 
-        public CipherHelper(SymmetricAlgorithm algorithm, int derivationIterations)
+        public StringCipherHelper(SymmetricAlgorithm algorithm, int derivationIterations)
             : this(algorithm)
         {
             this.derivationIterations = derivationIterations;
