@@ -4,13 +4,19 @@ using System.Text;
 
 namespace CipherHelper
 {
-    class StringHashHelper : IStringHashHelper
+    class StringHashHelper<T> : IStringHashHelper<T>
+        where T : HashAlgorithm, new()
     {
         private HashAlgorithm algorithm;
 
-        public StringHashHelper(HashAlgorithm algorithm)
+        public StringHashHelper()
         {
-            this.algorithm = algorithm;
+            algorithm = new T();
+        }
+
+        public void Dispose()
+        {
+            algorithm.Dispose();
         }
 
         public string Hash(string text)

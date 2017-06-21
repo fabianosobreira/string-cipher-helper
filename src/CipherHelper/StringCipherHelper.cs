@@ -7,26 +7,25 @@ using System.Text;
 
 namespace CipherHelper
 {
-    public class StringCipherHelper : IStringCipherHelper
+    public class StringCipherHelper<T> : IStringCipherHelper<T>
+        where T : SymmetricAlgorithm, new()
     {
         private readonly SymmetricAlgorithm algorithm;
         private readonly int keySizeInBytes;
         private readonly int blockSizeInBytes;
         private readonly int saltSizeInBytes;
-        private readonly int derivationIterations = 1000;
 
-        public StringCipherHelper(SymmetricAlgorithm algorithm)
+        public StringCipherHelper()
         {
-            this.algorithm = algorithm;
+            algorithm = new T();
             keySizeInBytes = algorithm.KeySize / 8;
             blockSizeInBytes = algorithm.BlockSize / 8;
-            saltSizeInBytes = blockSizeInBytes * 2;
+            saltSizeInBytes = blockSizeInBytes;
         }
 
-        public StringCipherHelper(SymmetricAlgorithm algorithm, int derivationIterations)
-            : this(algorithm)
+        public void Dispose()
         {
-            this.derivationIterations = derivationIterations;
+            algorithm.Dispose();
         }
 
         public string Encrypt(string plainText, string passPhrase)
@@ -34,7 +33,7 @@ namespace CipherHelper
             byte[] salt = GenerateEntropy();
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
 
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, salt, derivationIterations))
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, salt))
             {
                 byte[] key = password.GetBytes(keySizeInBytes);
 
@@ -70,7 +69,7 @@ namespace CipherHelper
                 .Take(cipherTextBytesWithSaltAndIv.Length - (saltSizeInBytes + blockSizeInBytes))
                 .ToArray();
 
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, salt, derivationIterations))
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, salt))
             {
                 byte[] key = password.GetBytes(keySizeInBytes);
 

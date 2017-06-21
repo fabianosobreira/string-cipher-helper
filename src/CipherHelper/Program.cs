@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace CipherHelper
@@ -14,60 +15,60 @@ namespace CipherHelper
 
             Console.WriteLine("Testing Hash algorithms...");
 
-            using (MD5 algorithm = new MD5CryptoServiceProvider())
+            using (var hashHelper = new StringHashHelper<MD5CryptoServiceProvider>())
             {
-                TestHashAlgorithm(algorithm, textToTest, interactions);
+                TestHashAlgorithm(hashHelper, textToTest, interactions);
             }
 
-            using (SHA1 algorithm = new SHA1CryptoServiceProvider())
+            using (var hashHelper = new StringHashHelper<SHA1CryptoServiceProvider>())
             {
-                TestHashAlgorithm(algorithm, textToTest, interactions);
+                TestHashAlgorithm(hashHelper, textToTest, interactions);
             }
 
-            using (SHA256 algorithm = new SHA256CryptoServiceProvider())
+            using (var hashHelper = new StringHashHelper<SHA256CryptoServiceProvider>())
             {
-                TestHashAlgorithm(algorithm, textToTest, interactions);
+                TestHashAlgorithm(hashHelper, textToTest, interactions);
             }
 
-            using (SHA384 algorithm = new SHA384CryptoServiceProvider())
+            using (var hashHelper = new StringHashHelper<SHA384CryptoServiceProvider>())
             {
-                TestHashAlgorithm(algorithm, textToTest, interactions);
+                TestHashAlgorithm(hashHelper, textToTest, interactions);
             }
 
-            using (SHA512 algorithm = new SHA512CryptoServiceProvider())
+            using (var hashHelper = new StringHashHelper<SHA512CryptoServiceProvider>())
             {
-                TestHashAlgorithm(algorithm, textToTest, interactions);
+                TestHashAlgorithm(hashHelper, textToTest, interactions);
             }
 
             Console.WriteLine("Testing Symmetric algorithms...");
 
-            using (RC2 algorithm = new RC2CryptoServiceProvider())
+            using(var cipherHelper = new StringCipherHelper<RC2CryptoServiceProvider>())
             {
-                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+                TestSymmetricAlgorithm(cipherHelper, textToTest, passPhrase, interactions);
             }
 
-            using (DES algorithm = new DESCryptoServiceProvider())
+            using(var cipherHelper = new StringCipherHelper<DESCryptoServiceProvider>())
             {
-                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+                TestSymmetricAlgorithm(cipherHelper, textToTest, passPhrase, interactions);
             }
 
-            using (TripleDES algorithm = new TripleDESCryptoServiceProvider())
+            using(var cipherHelper = new StringCipherHelper<TripleDESCryptoServiceProvider>())
             {
-                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+                TestSymmetricAlgorithm(cipherHelper, textToTest, passPhrase, interactions);
             }
 
-            using (Aes algorithm = new AesCryptoServiceProvider())
+            using(var cipherHelper = new StringCipherHelper<AesCryptoServiceProvider>())
             {
-                TestSymmetricAlgorithm(algorithm, textToTest, passPhrase, interactions);
+                TestSymmetricAlgorithm(cipherHelper, textToTest, passPhrase, interactions);
             }
 
             Console.WriteLine("Test finished.");
         }
 
-        private static void TestSymmetricAlgorithm(SymmetricAlgorithm algorithm, string textToCipher, string passPhrase, int interactions)
+        private static void TestSymmetricAlgorithm<T>(IStringCipherHelper<T> helper, string textToCipher, string passPhrase, int interactions)
+            where T : SymmetricAlgorithm
         {
             Stopwatch sw = Stopwatch.StartNew();
-            IStringCipherHelper helper = new StringCipherHelper(algorithm);
 
             for (int i = 0; i < interactions; i++)
             {
@@ -80,13 +81,15 @@ namespace CipherHelper
 
             sw.Stop();
 
-            Console.WriteLine($"Ellapsed after {interactions} interactions using {algorithm.GetType().Name}: {sw.Elapsed}");
+            string algorithm = helper.GetType().GetGenericArguments().First().Name;
+
+            Console.WriteLine($"Ellapsed after {interactions} interactions using {algorithm}: {sw.Elapsed}");
         }
 
-        private static void TestHashAlgorithm(HashAlgorithm algorithm, string textToHash, int interactions)
+        private static void TestHashAlgorithm<T>(IStringHashHelper<T> helper, string textToHash, int interactions)
+            where T : HashAlgorithm
         {
             Stopwatch sw = Stopwatch.StartNew();
-            IStringHashHelper helper = new StringHashHelper(algorithm);
 
             for (int i = 0; i < interactions; i++)
             {
@@ -96,7 +99,9 @@ namespace CipherHelper
 
             sw.Stop();
 
-            Console.WriteLine($"Ellapsed after {interactions} interactions using {algorithm.GetType().Name}: {sw.Elapsed}");
+            string algorithm = helper.GetType().GetGenericArguments().First().Name;
+
+            Console.WriteLine($"Ellapsed after {interactions} interactions using {algorithm}: {sw.Elapsed}");
         }
     }
 }
