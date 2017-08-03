@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -7,6 +9,8 @@ namespace CipherHelper
     class StringHashHelper<T> : IStringHashHelper<T>
         where T : HashAlgorithm, new()
     {
+        private const int saltSizeInBytes = 8;
+
         private HashAlgorithm algorithm;
 
         public StringHashHelper()
@@ -21,38 +25,58 @@ namespace CipherHelper
 
         public string Hash(string text)
         {
-            if (text == null)
-            {
-                throw new ArgumentNullException(nameof(text));
-            }
-
-            byte[] computedHash = algorithm.ComputeHash(Encoding.Default.GetBytes(text));
-
-            StringBuilder builder = new StringBuilder();
-
-            for (int i = 0; i < computedHash.Length; i++)
-            {
-                builder.Append(computedHash[i].ToString("x2"));
-            }
-
-            return builder.ToString();
+            text = text ?? throw new ArgumentNullException(nameof(text));
+            return Hash(text, GenerateEntropy());
         }
 
         public bool HashIsValid(string text, string hash)
         {
-            if (text == null)
-            {
-                throw new ArgumentNullException(nameof(text));
-            }
-
-            if (hash == null)
-            {
-                throw new ArgumentNullException(nameof(hash));
-            }
-
-            string hashOfText = Hash(text);
-
+            text = text ?? throw new ArgumentNullException(nameof(text));
+            hash = hash ?? throw new ArgumentNullException(nameof(hash));
+            byte[] saltBytes = ExtractSalt(hash);
+            string hashOfText = Hash(text, saltBytes);
             return hashOfText.Equals(hash, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static byte[] ExtractSalt(string hash)
+        {
+            List<byte> salt = new List<byte>(saltSizeInBytes);
+
+            for (int i = 0; i < saltSizeInBytes * 2; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    salt.Add(Convert.ToByte(hash.Substring(i, 2), 16));
+                }
+            }
+
+            return salt.ToArray();
+        }
+
+        private byte[] GenerateEntropy()
+        {
+            byte[] randomBytes = new byte[saltSizeInBytes];
+
+            using (RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider())
+            {
+                rngCsp.GetBytes(randomBytes);
+            }
+
+            return randomBytes;
+        }
+
+        private string Hash(string text, byte[] salt)
+        {
+            byte[] computedHash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(text));
+            IEnumerable<byte> computedHashWithSalt = salt.Concat(computedHash);
+            StringBuilder builder = new StringBuilder((computedHash.Length + saltSizeInBytes) * 2);
+
+            foreach (byte value in computedHashWithSalt)
+            {
+                builder.Append(value.ToString("x2"));
+            }
+
+            return builder.ToString();
         }
     }
 }
