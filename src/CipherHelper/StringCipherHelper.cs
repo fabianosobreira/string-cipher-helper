@@ -13,14 +13,12 @@ namespace CipherHelper
         private readonly SymmetricAlgorithm algorithm;
         private readonly int keySizeInBytes;
         private readonly int blockSizeInBytes;
-        private readonly int saltSizeInBytes;
 
         public StringCipherHelper()
         {
             algorithm = new T();
             keySizeInBytes = algorithm.KeySize / 8;
             blockSizeInBytes = algorithm.BlockSize / 8;
-            saltSizeInBytes = blockSizeInBytes;
         }
 
         public void Dispose()
@@ -31,10 +29,9 @@ namespace CipherHelper
         public string Encrypt(string plainText, string passPhrase)
         {
             algorithm.GenerateIV();
-            byte[] salt = GenerateEntropy();
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
 
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, salt))
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, algorithm.IV))
             {
                 byte[] key = password.GetBytes(keySizeInBytes);
 
@@ -45,8 +42,7 @@ namespace CipherHelper
                     cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
                     cryptoStream.FlushFinalBlock();
 
-                    IEnumerable<byte> cipherTextBytes = salt;
-                    cipherTextBytes = cipherTextBytes.Concat(algorithm.IV);
+                    IEnumerable<byte> cipherTextBytes = algorithm.IV;
                     cipherTextBytes = cipherTextBytes.Concat(memoryStream.ToArray());
 
                     return Convert.ToBase64String(cipherTextBytes.ToArray());
@@ -56,21 +52,18 @@ namespace CipherHelper
 
         public string Decrypt(string cipherText, string passPhrase)
         {
-            byte[] cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
+            byte[] cipherTextBytesWithIV = Convert.FromBase64String(cipherText);
 
-            byte[] salt = cipherTextBytesWithSaltAndIv.Take(saltSizeInBytes).ToArray();
-
-            byte[] intializationVector = cipherTextBytesWithSaltAndIv
-                .Skip(saltSizeInBytes)
+            byte[] intializationVector = cipherTextBytesWithIV
                 .Take(blockSizeInBytes)
                 .ToArray();
 
-            byte[] cipherTextBytes = cipherTextBytesWithSaltAndIv
-                .Skip(saltSizeInBytes + blockSizeInBytes)
-                .Take(cipherTextBytesWithSaltAndIv.Length - (saltSizeInBytes + blockSizeInBytes))
+            byte[] cipherTextBytes = cipherTextBytesWithIV
+                .Skip(blockSizeInBytes)
+                .Take(cipherTextBytesWithIV.Length - blockSizeInBytes)
                 .ToArray();
 
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, salt))
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(passPhrase, algorithm.IV))
             {
                 byte[] key = password.GetBytes(keySizeInBytes);
 
@@ -84,16 +77,6 @@ namespace CipherHelper
                     return Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
                 }
             }
-        }
-
-        private byte[] GenerateEntropy()
-        {
-            byte[] randomBytes = new byte[saltSizeInBytes];
-            using (RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider())
-            {
-                rngCsp.GetBytes(randomBytes);
-            }
-            return randomBytes;
         }
     }
 }
