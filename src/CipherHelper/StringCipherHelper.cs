@@ -30,6 +30,7 @@ namespace CipherHelper
 
         public string Encrypt(string plainText, string passPhrase)
         {
+            algorithm.GenerateIV();
             byte[] salt = GenerateEntropy();
             byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
 
