@@ -1,12 +1,11 @@
-﻿using System;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 
 namespace CipherHelper
 {
-    public interface IStringCipherHelper<T>: IDisposable
+    public interface IStringCipherHelper<T>
         where T : SymmetricAlgorithm
     {
-        string Encrypt(string plainText, string passPhrase);
-        string Decrypt(string cipherText, string passPhrase);
+        string Encrypt(string text, string pass);
+        string Decrypt(string base64String, string pass);
     }
 }

@@ -11,18 +11,6 @@ namespace CipherHelper
     {
         private const int saltSizeInBytes = 8;
 
-        private HashAlgorithm algorithm;
-
-        public StringHashHelper()
-        {
-            algorithm = new T();
-        }
-
-        public void Dispose()
-        {
-            algorithm.Dispose();
-        }
-
         public string Hash(string text)
         {
             text = text ?? throw new ArgumentNullException(nameof(text));
@@ -67,16 +55,19 @@ namespace CipherHelper
 
         private string Hash(string text, byte[] salt)
         {
-            byte[] computedHash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(text));
-            IEnumerable<byte> computedHashWithSalt = salt.Concat(computedHash);
-            StringBuilder builder = new StringBuilder((computedHash.Length + saltSizeInBytes) * 2);
-
-            foreach (byte value in computedHashWithSalt)
+            using (var algorithm = new T())
             {
-                builder.Append(value.ToString("x2"));
-            }
+                byte[] computedHash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(text));
+                IEnumerable<byte> computedHashWithSalt = salt.Concat(computedHash);
+                StringBuilder builder = new StringBuilder((computedHash.Length + saltSizeInBytes) * 2);
 
-            return builder.ToString();
+                foreach (byte value in computedHashWithSalt)
+                {
+                    builder.Append(value.ToString("x2"));
+                }
+
+                return builder.ToString();
+            }
         }
     }
 }
