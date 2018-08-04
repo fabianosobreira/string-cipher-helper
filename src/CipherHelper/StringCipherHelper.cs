@@ -10,12 +10,15 @@ namespace CipherHelper
     public class StringCipherHelper<T> : IStringCipherHelper<T>
         where T : SymmetricAlgorithm, new()
     {
-        private const int Iterations = 1000;
+        private const int iterations = 1000;
 
         public string Encrypt(string text, string pass)
         {
-            using (var algorithm = new T())
-            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(pass, algorithm.IV, Iterations))
+            if (string.IsNullOrEmpty(text)) throw new ArgumentNullException(nameof(text));
+            if (string.IsNullOrEmpty(pass)) throw new ArgumentNullException(nameof(pass));
+
+            using (SymmetricAlgorithm algorithm = new T())
+            using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(pass, algorithm.IV, iterations))
             {
                 int keySizeInBytes = algorithm.KeySize / 8;
                 byte[] key = password.GetBytes(keySizeInBytes);
@@ -38,7 +41,10 @@ namespace CipherHelper
 
         public string Decrypt(string base64String, string pass)
         {
-            using (var algorithm = new T())
+            if (string.IsNullOrEmpty(base64String)) throw new ArgumentNullException(nameof(base64String));
+            if (string.IsNullOrEmpty(pass)) throw new ArgumentNullException(nameof(pass));
+
+            using (SymmetricAlgorithm algorithm = new T())
             {
                 int blockSizeInBytes = algorithm.BlockSize / 8;
 
@@ -46,7 +52,7 @@ namespace CipherHelper
                 byte[] iv = cipher.Take(blockSizeInBytes).ToArray();
                 byte[] value = cipher.Skip(blockSizeInBytes).Take(cipher.Length - blockSizeInBytes).ToArray();
 
-                using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(pass, iv, Iterations))
+                using (Rfc2898DeriveBytes password = new Rfc2898DeriveBytes(pass, iv, iterations))
                 {
                     int keySizeInBytes = algorithm.KeySize / 8;
                     byte[] key = password.GetBytes(keySizeInBytes);

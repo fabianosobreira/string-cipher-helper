@@ -13,14 +13,15 @@ namespace CipherHelper
 
         public string Hash(string text)
         {
-            text = text ?? throw new ArgumentNullException(nameof(text));
+            if (string.IsNullOrEmpty(text)) throw new ArgumentNullException(nameof(text));
             return Hash(text, GenerateEntropy());
         }
 
         public bool HashIsValid(string text, string hash)
         {
-            text = text ?? throw new ArgumentNullException(nameof(text));
-            hash = hash ?? throw new ArgumentNullException(nameof(hash));
+            if (string.IsNullOrEmpty(text)) throw new ArgumentNullException(nameof(text));
+            if (string.IsNullOrEmpty(hash)) throw new ArgumentNullException(nameof(hash));
+
             byte[] saltBytes = ExtractSalt(hash);
             string hashOfText = Hash(text, saltBytes);
             return hashOfText.Equals(hash, StringComparison.OrdinalIgnoreCase);
@@ -55,7 +56,7 @@ namespace CipherHelper
 
         private string Hash(string text, byte[] salt)
         {
-            using (var algorithm = new T())
+            using (HashAlgorithm algorithm = new T())
             {
                 byte[] computedHash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(text));
                 IEnumerable<byte> computedHashWithSalt = salt.Concat(computedHash);
