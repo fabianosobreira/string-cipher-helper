@@ -9,7 +9,7 @@ namespace CipherHelper
     class StringHashHelper<T> : IStringHashHelper<T>
         where T : HashAlgorithm, new()
     {
-        private const int saltSizeInBytes = 8;
+        private const int saltSizeInBytes = 4;
 
         public string Hash(string text)
         {

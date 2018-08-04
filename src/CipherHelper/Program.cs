@@ -11,7 +11,7 @@ namespace CipherHelper
         {
             const string textToTest = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
             const string passPhrase = "my-secret-key";
-            const int iterations = 1000;
+            const int iterations = 100;
 
             Console.WriteLine("Testing Hash algorithms...");
 
